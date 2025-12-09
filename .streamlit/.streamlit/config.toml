@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "blue"
+backgroundColor = "#f0f4f8"
+secondaryBackgroundColor = "#ffffff"
+textColor = "#333333"
+streamlit run word_search_app.py
