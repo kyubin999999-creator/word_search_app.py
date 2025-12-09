@@ -1,0 +1,5 @@
+streamlit
+wikipedia-api
+requests
+Pillow
+pip install -r requirements.txt
