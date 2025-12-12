@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import json
 
 # Google Custom Search API 설정
 API_KEY = "YOUR_GOOGLE_API_KEY"  # 여기에 실제 Google API 키 입력
@@ -15,15 +14,11 @@ def get_image(query):
     url = f"https://www.googleapis.com/customsearch/v1?q={query}&searchType=image&key={API_KEY}&cx={CX}"
     response = requests.get(url)
     
-    # API 응답 상태 확인
     if response.status_code != 200:
         st.write(f"Google API Error: {response.status_code} - {response.text}")
         return None
     
     results = response.json()
-    
-    # 응답 로그 출력
-    st.write("Google Image Search Response:", results)  # API 응답을 확인합니다.
     
     try:
         image_url = results['items'][0]['link']
@@ -42,15 +37,11 @@ def get_definition(word):
     
     response = requests.get(url, headers=headers)
     
-    # API 응답 상태 확인
     if response.status_code != 200:
         st.write(f"Oxford API Error: {response.status_code} - {response.text}")
         return "Unable to fetch definition."
     
     data = response.json()
-    
-    # 응답 로그 출력
-    st.write("Oxford API Response:", data)  # API 응답을 확인합니다.
     
     try:
         definition = data['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0]
