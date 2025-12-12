@@ -1,82 +1,60 @@
 import streamlit as st
-import wikipedia
 import requests
-from io import BytesIO
-from PIL import Image
+import json
 
-# CSS 스타일링을 위한 코드
-st.markdown("""
-    <style>
-        body {
-            background-color: #f0f4f8;
-            font-family: 'Arial', sans-serif;
-        }
-        .main {
-            padding: 2rem;
-        }
-        h1 {
-            color: #2e3d49;
-            text-align: center;
-            font-size: 3rem;
-        }
-        h2 {
-            color: #1d3557;
-            font-size: 2rem;
-        }
-        .search-box {
-            margin: auto;
-            width: 50%;
-            padding: 10px;
-            font-size: 1.2rem;
-            border-radius: 5px;
-            border: 2px solid #ccc;
-        }
-        .description {
-            background-color: #ffffff;
-            border-radius: 8px;
-            padding: 1rem;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        .img-container {
-            display: flex;
-            justify-content: center;
-            margin-top: 20px;
-        }
-    </style>
-""", unsafe_allow_html=True)
+# Google Custom Search API 설정
+API_KEY = "YOUR_GOOGLE_API_KEY"  # 여기 API 키를 입력하세요
+CX = "YOUR_CUSTOM_SEARCH_ENGINE_ID"  # 여기 CX 값을 입력하세요
 
-# Streamlit 웹 앱 설정
-st.title('단어 검색기')
-st.write('단어를 입력하면 설명과 이미지를 가져옵니다.')
+# Oxford API 설정
+OXFORD_API_KEY = "YOUR_OXFORD_API_KEY"  # 여기 API 키를 입력하세요
+OXFORD_APP_ID = "YOUR_OXFORD_APP_ID"  # 여기 App ID를 입력하세요
 
-# 사용자 입력을 위한 텍스트 박스 스타일 추가
-search_word = st.text_input("검색할 단어를 입력하세요:", key="search", label_visibility="visible")
+# 이미지 검색 함수
+def get_image(query):
+    url = f"https://www.googleapis.com/customsearch/v1?q={query}&searchType=image&key={API_KEY}&cx={CX}"
+    response = requests.get(url)
+    results = response.json()
+    
+    try:
+        image_url = results['items'][0]['link']
+        return image_url
+    except KeyError:
+        return None
 
-if search_word:
-    # Wikipedia API를 사용해서 설명 가져오기
-    with st.spinner('정보를 가져오는 중...'):
-        try:
-            # Wikipedia에서 설명 가져오기
-            summary = wikipedia.summary(search_word, sentences=3)  # 3문장으로 제한
-            st.subheader(f"{search_word}에 대한 설명")
-            st.markdown(f'<div class="description">{summary}</div>', unsafe_allow_html=True)
-            
-            # Unsplash API로 이미지 검색
-            url = f"https://api.unsplash.com/photos/random?query={search_word}&client_id=YOUR_ACCESS_KEY"
-            response = requests.get(url)
-            image_url = response.json()[0]['urls']['regular']  # 첫 번째 이미지 가져오기
-            
-            # 이미지 다운로드 및 표시
-            image_response = requests.get(image_url)
-            img = Image.open(BytesIO(image_response.content))
-            
-            # 이미지를 화면에 맞게 출력
-            st.subheader(f"{search_word} 관련 이미지")
-            st.image(img, caption=f"{search_word} 이미지", use_column_width=True)
-        
-        except wikipedia.exceptions.DisambiguationError as e:
-            st.error(f"검색어에 대해 여러 개의 결과가 있습니다: {e.options}")
-        except wikipedia.exceptions.HTTPTimeoutError:
-            st.error("Wikipedia API 호출에 실패했습니다. 나중에 다시 시도해 주세요.")
-        except Exception as e:
-            st.error(f"오류 발생: {str(e)}")
+# 사전 설명 가져오기 함수
+def get_definition(word):
+    url = f"https://od-api.oxforddictionaries.com/api/v2/entries/en-us/{word.lower()}"
+    headers = {
+        "app_id": OXFORD_APP_ID,
+        "app_key": OXFORD_API_KEY
+    }
+    response = requests.get(url, headers=headers)
+    data = response.json()
+    
+    try:
+        definition = data['results'][0]['lexicalEntries'][0]['entries'][0]['senses'][0]['definitions'][0]
+        return definition
+    except KeyError:
+        return "No definition found."
+
+# Streamlit UI 설정
+st.title("단어 설명 및 이미지 검색")
+st.write("단어를 입력하면 그에 대한 설명과 이미지를 보여줍니다.")
+
+# 단어 입력 받기
+word = st.text_input("단어를 입력하세요:")
+
+if word:
+    st.header(f"{word}에 대한 설명과 이미지")
+    
+    # 이미지 검색
+    image_url = get_image(word)
+    if image_url:
+        st.image(image_url, caption=f"Image for {word}", use_column_width=True)
+    else:
+        st.write("이미지를 찾을 수 없습니다.")
+    
+    # 단어 설명
+    definition = get_definition(word)
+    st.write(f"설명: {definition}")
