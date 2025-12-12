@@ -78,3 +78,5 @@ if word:
     # 단어 설명
     definition = get_definition(word)
     st.write(f"설명: {definition}")
+API_KEY = "YOUR_GOOGLE_API_KEY"  # 여기에 실제 Google API 키 입력
+CX = "YOUR_CUSTOM_SEARCH_ENGINE_ID"  # 여기에 실제 Custom Search Engine ID 입력
